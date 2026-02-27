@@ -30,6 +30,30 @@ git push development master
 git push production master
 ```
 
+## Supabase Configuration
+
+### Criar Bucket para Avatares
+1. Acesse [Supabase Dashboard](https://supabase.com/dashboard)
+2. Vá para **Storage** no seu projeto
+3. Clique em **Create bucket**
+4. Nome: `avatars`
+5. Marque como **Public bucket**
+6. Configure as políticas RLS (se necessário)
+
+### Configurar Row Level Security (RLS)
+```sql
+-- Permitir upload para usuários autenticados
+CREATE POLICY "Users can upload their own avatar" ON storage.objects
+FOR INSERT WITH CHECK (
+  bucket_id = 'avatars'
+  AND auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- Permitir leitura pública
+CREATE POLICY "Avatar images are publicly accessible" ON storage.objects
+FOR SELECT USING (bucket_id = 'avatars');
+```
+
 ## Vercel Configuration
 
 1. Acesse [Vercel Dashboard](https://vercel.com/dashboard)
