@@ -44,6 +44,8 @@ export default function SubmitPage() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [gameSearch, setGameSearch] = useState('')
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
+  const [searchResults, setSearchResults] = useState<Game[]>([])
+  const [isSearching, setIsSearching] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -189,6 +191,37 @@ export default function SubmitPage() {
       return a.name.localeCompare(b.name)
     }))
   }, [popularGames])
+
+  useEffect(() => {
+    if (gameSearch.length < 3) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+
+    const searchGames = async () => {
+      setIsSearching(true)
+      try {
+        const response = await fetch(`https://api.rawg.io/api/games?key=${process.env.NEXT_PUBLIC_RAWG_API_KEY}&search=${encodeURIComponent(gameSearch)}&platforms=4&page_size=20`)
+        const data = await response.json()
+        const searchedGames: Game[] = data.results.map((game: any) => ({
+          id: game.id,
+          name: game.name,
+          cover: game.background_image,
+          isPopular: popularGames.includes(game.name)
+        }))
+        setSearchResults(searchedGames)
+      } catch (error) {
+        console.error('Error searching games:', error)
+        setSearchResults([])
+      } finally {
+        setIsSearching(false)
+      }
+    }
+
+    const timeoutId = setTimeout(searchGames, 300)
+    return () => clearTimeout(timeoutId)
+  }, [gameSearch, popularGames])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -376,21 +409,26 @@ export default function SubmitPage() {
             </div>
             {showDropdown && (
               <div className="absolute z-10 w-full bg-zinc-800 border border-zinc-700 rounded-md mt-1 max-h-60 overflow-y-auto">
-                {games.filter(game => game.name.toLowerCase().includes(formData.game.toLowerCase())).map(game => (
-                  <div
-                    key={game.id}
-                    onClick={() => {
-                      setFormData(prev => ({ ...prev, game: game.name }))
-                      setSelectedGame(game)
-                      setShowDropdown(false)
-                    }}
-                    className="flex items-center px-3 py-2 hover:bg-zinc-700 cursor-pointer"
-                  >
-                    {game.cover && <img src={game.cover} alt={game.name} className="w-8 h-8 mr-3 rounded" />}
-                    <span className="text-zinc-100">{game.name}</span>
-                    {game.isPopular && <span className="ml-2 text-orange-400">popular 🔥</span>}
-                  </div>
-                ))}
+                {isSearching ? (
+                  <div className="px-3 py-2 text-zinc-400">Buscando jogos...</div>
+                ) : (
+                  (gameSearch ? searchResults : games.filter(game => game.name.toLowerCase().includes(formData.game.toLowerCase()))).map(game => (
+                    <div
+                      key={game.id}
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, game: game.name }))
+                        setSelectedGame(game)
+                        setGameSearch('')
+                        setShowDropdown(false)
+                      }}
+                      className="flex items-center px-3 py-2 hover:bg-zinc-700 cursor-pointer"
+                    >
+                      {game.cover && <img src={game.cover} alt={game.name} className="w-8 h-8 mr-3 rounded" />}
+                      <span className="text-zinc-100">{game.name}</span>
+                      {game.isPopular && <span className="ml-2 text-orange-400">popular 🔥</span>}
+                    </div>
+                  ))
+                )}
               </div>
             )}
             {errors.game && <p className="text-red-400 text-sm mt-1">{errors.game}</p>}

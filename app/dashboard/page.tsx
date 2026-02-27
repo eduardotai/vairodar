@@ -8,19 +8,22 @@ export default async function DashboardPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/auth/login')
-  }
 
-  // Fetch user's reports
-  const { data: reports } = await supabase
+  // Fetch reports
+  const query = supabase
     .from('reports')
     .select(`
       *,
       profile:profiles(*)
     `)
-    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
+    .limit(50)
+
+  if (user) {
+    query.eq('user_id', user.id)
+  }
+
+  const { data: reports } = await query
 
   // Calculate stats
   const totalReports = reports?.length || 0
@@ -32,7 +35,9 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-emerald-400 mb-8">Meu Dashboard</h1>
+        <h1 className="text-3xl font-bold text-emerald-400 mb-8">
+          {user ? 'Meu Dashboard' : 'Dashboard'}
+        </h1>
 
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -80,16 +85,20 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* User's Reports */}
+        {/* Reports */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-zinc-100">Meus Reports</h2>
-            <Link
-              href="/submit"
-              className="bg-emerald-500 text-zinc-950 px-4 py-2 rounded-lg font-semibold hover:bg-emerald-400 transition-colors"
-            >
-              + Novo Report
-            </Link>
+            <h2 className="text-xl font-semibold text-zinc-100">
+              {user ? 'Meus Reports' : 'Reports Recentes'}
+            </h2>
+            {user && (
+              <Link
+                href="/submit"
+                className="bg-emerald-500 text-zinc-950 px-4 py-2 rounded-lg font-semibold hover:bg-emerald-400 transition-colors"
+              >
+                + Novo Report
+              </Link>
+            )}
           </div>
 
           {reports && reports.length > 0 ? (
@@ -101,14 +110,23 @@ export default async function DashboardPage() {
           ) : (
             <div className="text-center py-12 bg-zinc-900 rounded-lg border border-zinc-800">
               <p className="text-zinc-400 text-lg mb-4">
-                Você ainda não enviou nenhum report.
+                {user ? 'Você ainda não enviou nenhum report.' : 'Nenhum report encontrado.'}
               </p>
-              <Link
-                href="/submit"
-                className="bg-emerald-500 text-zinc-950 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-400 transition-colors"
-              >
-                Enviar meu primeiro report
-              </Link>
+              {user ? (
+                <Link
+                  href="/submit"
+                  className="bg-emerald-500 text-zinc-950 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-400 transition-colors"
+                >
+                  Enviar meu primeiro report
+                </Link>
+              ) : (
+                <Link
+                  href="/reports"
+                  className="bg-emerald-500 text-zinc-950 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-400 transition-colors"
+                >
+                  Ver todos os reports
+                </Link>
+              )}
             </div>
           )}
         </div>
