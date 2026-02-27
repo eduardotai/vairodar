@@ -41,7 +41,7 @@ git push production master
 -- Criar tabela profiles se não existir
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  email TEXT,
+  email TEXT NOT NULL,
   full_name TEXT,
   bio TEXT,
   avatar_url TEXT,

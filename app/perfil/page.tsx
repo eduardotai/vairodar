@@ -137,6 +137,7 @@ export default function ProfilePage() {
         .from('profiles')
         .upsert({
           id: session.user.id,
+          email: profile.email,
           bio: profile.bio,
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString()
