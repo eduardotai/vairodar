@@ -2,12 +2,22 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ReportCard } from '@/components/ReportCard'
 import Link from 'next/link'
-import { Heart, TrendingUp, Users } from 'lucide-react'
+import { Heart, TrendingUp, Users, User, Settings, Award, Calendar, BarChart3 } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
+
+  let profile = null
+  if (user) {
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+    profile = profileData
+  }
 
   // Fetch reports
   const query = supabase
@@ -31,6 +41,12 @@ export default async function DashboardPage() {
     ? Math.round(reports!.reduce((sum, r) => sum + r.fps_avg, 0) / totalReports)
     : 0
   const totalLikes = reports?.reduce((sum, r) => sum + r.likes, 0) || 0
+  const recentReports = reports?.filter(r => {
+    const reportDate = new Date(r.created_at)
+    const weekAgo = new Date()
+    weekAgo.setDate(weekAgo.getDate() - 7)
+    return reportDate > weekAgo
+  }).length || 0
 
   return (
     <div className="min-h-screen px-4 py-8">
@@ -39,22 +55,76 @@ export default async function DashboardPage() {
           {user ? 'Meu Dashboard' : 'Dashboard'}
         </h1>
 
+        {/* User Profile Section */}
+        {user && profile && (
+          <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800 mb-8">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center">
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt="Avatar"
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-zinc-950" />
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-zinc-100">
+                    {profile.full_name || user.email}
+                  </h2>
+                  <p className="text-zinc-400">{user.email}</p>
+                  {profile.bio && (
+                    <p className="text-zinc-300 mt-2 max-w-md">{profile.bio}</p>
+                  )}
+                  <div className="flex items-center space-x-4 mt-2">
+                    {profile.is_supporter && (
+                      <span className="flex items-center space-x-1 bg-emerald-900/20 text-emerald-400 px-2 py-1 rounded-full text-sm">
+                        <Award className="w-3 h-3" />
+                        <span>Apoiador</span>
+                      </span>
+                    )}
+                    <span className="text-zinc-500 text-sm">
+                      Membro desde {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <Link
+                href="/perfil"
+                className="flex items-center space-x-2 bg-zinc-700 text-zinc-100 px-4 py-2 rounded-lg hover:bg-zinc-600 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                <span>Editar Perfil</span>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
             <div className="flex items-center space-x-2 mb-2">
-              <TrendingUp className="w-5 h-5 text-emerald-400" />
+              <BarChart3 className="w-5 h-5 text-emerald-400" />
               <span className="text-zinc-300">Reports Enviados</span>
             </div>
             <div className="text-2xl font-bold text-emerald-400">{totalReports}</div>
+            <div className="text-zinc-500 text-sm mt-1">
+              {recentReports} esta semana
+            </div>
           </div>
 
           <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
             <div className="flex items-center space-x-2 mb-2">
-              <Users className="w-5 h-5 text-emerald-400" />
+              <TrendingUp className="w-5 h-5 text-emerald-400" />
               <span className="text-zinc-300">FPS Médio Geral</span>
             </div>
             <div className="text-2xl font-bold text-emerald-400">{avgFps} FPS</div>
+            <div className="text-zinc-500 text-sm mt-1">
+              Baseado em {totalReports} reports
+            </div>
           </div>
 
           <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
@@ -63,6 +133,22 @@ export default async function DashboardPage() {
               <span className="text-zinc-300">Likes Recebidos</span>
             </div>
             <div className="text-2xl font-bold text-emerald-400">{totalLikes}</div>
+            <div className="text-zinc-500 text-sm mt-1">
+              {totalReports > 0 ? Math.round(totalLikes / totalReports * 10) / 10 : 0} likes/report
+            </div>
+          </div>
+
+          <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
+            <div className="flex items-center space-x-2 mb-2">
+              <Calendar className="w-5 h-5 text-emerald-400" />
+              <span className="text-zinc-300">Atividade</span>
+            </div>
+            <div className="text-2xl font-bold text-emerald-400">
+              {totalReports > 0 ? 'Ativo' : 'Iniciante'}
+            </div>
+            <div className="text-zinc-500 text-sm mt-1">
+              {profile?.is_supporter ? 'Apoiador' : 'Comunidade'}
+            </div>
           </div>
         </div>
 

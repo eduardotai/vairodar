@@ -1,4 +1,5 @@
 import { Heart, User } from 'lucide-react'
+import Link from 'next/link'
 import { Report } from '@/lib/types'
 
 interface ReportCardProps {
@@ -11,7 +12,8 @@ export function ReportCard({ report }: ReportCardProps) {
   }
 
   return (
-    <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800 hover:border-emerald-500 transition-colors">
+    <Link href={`/reports/${report.id}`}>
+      <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800 hover:border-emerald-500 transition-colors cursor-pointer">
       {/* FPS */}
       <div className="text-center mb-4">
         <div className="text-4xl font-bold text-emerald-400">
@@ -94,5 +96,6 @@ export function ReportCard({ report }: ReportCardProps) {
         </button>
       </div>
     </div>
+    </Link>
   )
 }

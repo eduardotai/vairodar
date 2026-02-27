@@ -347,9 +347,11 @@ export default function SubmitPage() {
       }
       console.log('Sending report data:', reportData)
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('reports')
         .insert([reportData])
+        .select()
+        .single()
 
       if (error) {
         console.error('Supabase error:', error)
@@ -357,8 +359,9 @@ export default function SubmitPage() {
       }
 
       setSuccess(true)
+      // Redirect to the newly created report
       setTimeout(() => {
-        router.push('/dashboard')
+        router.push(`/reports/${data.id}`)
       }, 2000)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro desconhecido'
