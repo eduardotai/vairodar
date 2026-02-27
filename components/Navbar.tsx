@@ -42,7 +42,7 @@ export function Navbar() {
               <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
                 <Cpu className="w-4 h-4 text-zinc-950" />
               </div>
-              <span className="text-xl font-bold text-emerald-400">JOGALISO</span>
+              <span className="text-xl font-bold text-emerald-400">Vai rodar?</span>
             </Link>
           </div>
           <div className="flex items-center space-x-8">

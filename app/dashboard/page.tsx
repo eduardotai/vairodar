@@ -70,7 +70,7 @@ export default async function DashboardPage() {
         <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800 mb-8">
           <h2 className="text-xl font-semibold text-emerald-400 mb-4">Apoie o Projeto</h2>
           <p className="text-zinc-300 mb-4">
-            O JogaLiso é 100% gratuito e depende do apoio da comunidade. Sua contribuição ajuda a manter os servidores e recompensar os top contributors.
+            Vai rodar? é 100% gratuito e depende do apoio da comunidade. Sua contribuição ajuda a manter os servidores e recompensar os top contributors.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link

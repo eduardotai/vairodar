@@ -8,7 +8,7 @@ import { Footer } from '@/components/Footer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'JogaLiso - Configurações reais que a comunidade testou',
+  title: 'Vai rodar? - Configurações reais que a comunidade testou',
   description: 'Encontre presets otimizados para seu hardware gamer brasileiro.',
 }
 

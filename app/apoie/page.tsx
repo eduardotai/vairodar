@@ -6,9 +6,9 @@ export default function ApoiePage() {
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-emerald-400 mb-4">Apoie o JogaLiso</h1>
+          <h1 className="text-4xl font-bold text-emerald-400 mb-4">Apoie o Vai rodar?</h1>
           <p className="text-xl text-zinc-300 mb-6">
-            O JogaLiso é 100% gratuito e depende do apoio da comunidade gamer brasileira
+            Vai rodar? é 100% gratuito e depende do apoio da comunidade gamer brasileira
           </p>
           <div className="text-emerald-400 font-semibold">
             💚 100% das doações vão para manter os servidores e recompensar os top contributors da comunidade

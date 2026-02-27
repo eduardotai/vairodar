@@ -84,7 +84,7 @@ export default function Signup() {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-emerald-400 mb-2">Junte-se à Comunidade JogaLiso</h1>
+            <h1 className="text-4xl font-bold text-emerald-400 mb-2">Junte-se à Comunidade Vai rodar?</h1>
             <p className="text-xl text-zinc-300">Compartilhe suas configurações e ajude outros jogadores</p>
           </div>
 
@@ -120,7 +120,7 @@ export default function Signup() {
                   <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
                   <div>
                     <h4 className="text-emerald-300 font-medium mb-1">100% Gratuito</h4>
-                    <p className="text-emerald-400/80 text-sm">O JogaLiso é mantido pela comunidade e não cobra nada para usar.</p>
+                    <p className="text-emerald-400/80 text-sm">Vai rodar? é mantido pela comunidade e não cobra nada para usar.</p>
                   </div>
                 </div>
               </div>

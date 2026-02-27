@@ -13,7 +13,7 @@ export default function Home() {
             </div>
           </div>
           <h1 className="text-6xl md:text-8xl font-bold text-emerald-400 mb-4">
-            JOGALISO
+            Vai rodar?
           </h1>
           <p className="text-xl md:text-2xl text-zinc-300 mb-8">
             Configurações reais que a comunidade testou no seu hardware
