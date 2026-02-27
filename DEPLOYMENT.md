@@ -45,6 +45,11 @@ git push production master
 **Execute estes comandos UM POR VEZ no SQL Editor:**
 
 ```sql
+-- Primeiro: Deletar política existente (se existir)
+DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
+```
+
+```sql
 -- Política 1: Upload de avatar (simplificada)
 CREATE POLICY "Users can upload their own avatar" ON storage.objects
 FOR INSERT WITH CHECK (
@@ -62,6 +67,9 @@ FOR SELECT USING (bucket_id = 'avatars');
 **Se ainda não funcionar, tente esta versão alternativa:**
 
 ```sql
+-- Deletar política existente
+DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
+
 -- Política 1 alternativa: Upload de avatar
 CREATE POLICY "Users can upload their own avatar" ON storage.objects
 FOR INSERT WITH CHECK (
