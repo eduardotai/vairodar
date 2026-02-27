@@ -5,8 +5,8 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="flex items-center justify-center min-h-screen px-4">
-        <div className="text-center max-w-4xl mx-auto">
+      <section className="flex items-center justify-center min-h-screen px-4 py-20">
+        <div className="text-center max-w-4xl mx-auto w-full">
           <div className="flex justify-center mb-8">
             <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center">
               <Cpu className="w-10 h-10 text-zinc-950" />
@@ -40,11 +40,11 @@ export default function Home() {
 
       {/* Hardware Cards */}
       <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-zinc-100 mb-12">
             Otimizado para seu hardware
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="bg-zinc-900 p-8 rounded-lg border border-zinc-800 hover:border-emerald-500 transition-colors">
               <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center mb-4">
                 <Monitor className="w-6 h-6 text-zinc-950" />
