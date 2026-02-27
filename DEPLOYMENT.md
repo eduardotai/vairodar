@@ -41,15 +41,20 @@ git push production master
 6. Configure as políticas RLS (se necessário)
 
 ### Configurar Row Level Security (RLS)
+
+**Execute estes comandos UM POR VEZ no SQL Editor:**
+
 ```sql
--- Permitir upload para usuários autenticados
+-- Política 1: Upload de avatar
 CREATE POLICY "Users can upload their own avatar" ON storage.objects
 FOR INSERT WITH CHECK (
   bucket_id = 'avatars'
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
+```
 
--- Permitir leitura pública
+```sql
+-- Política 2: Leitura pública de avatares
 CREATE POLICY "Avatar images are publicly accessible" ON storage.objects
 FOR SELECT USING (bucket_id = 'avatars');
 ```
