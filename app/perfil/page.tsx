@@ -115,6 +115,33 @@ export default function ProfilePage() {
     return data.publicUrl
   }
 
+  const handleSaveBio = async () => {
+    if (!session?.user) return
+
+    setLoading(true)
+    setErrors({})
+    setSuccess('')
+
+    try {
+      // Update only bio
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: session.user.id,
+          bio: profile.bio,
+          updated_at: new Date().toISOString()
+        })
+
+      if (profileError) throw profileError
+
+      setSuccess('Bio atualizada com sucesso!')
+    } catch (error: any) {
+      setErrors({ general: error.message })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!session?.user) return
@@ -281,7 +308,17 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">Bio</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-zinc-300">Bio</label>
+                <button
+                  type="button"
+                  onClick={handleSaveBio}
+                  disabled={loading}
+                  className="px-3 py-1 bg-zinc-700 text-zinc-100 text-sm rounded hover:bg-zinc-600 transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Salvando...' : 'Salvar Bio'}
+                </button>
+              </div>
               <textarea
                 value={profile.bio}
                 onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
@@ -299,7 +336,7 @@ export default function ProfilePage() {
               className="w-full bg-emerald-500 text-zinc-950 py-3 px-4 rounded-md font-semibold hover:bg-emerald-400 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
             >
               <Save className="w-4 h-4" />
-              <span>{loading ? 'Salvando...' : 'Salvar Perfil'}</span>
+              <span>{loading ? 'Salvando...' : 'Salvar Perfil Completo'}</span>
             </button>
           </form>
 
