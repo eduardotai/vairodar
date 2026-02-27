@@ -96,7 +96,8 @@ CREATE TABLE IF NOT EXISTS reports (
   stability_note TEXT,
   images TEXT[],
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  likes INTEGER DEFAULT 0
+  likes INTEGER DEFAULT 0,
+  views INTEGER DEFAULT 0
 );
 
 -- Habilitar RLS

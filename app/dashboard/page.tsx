@@ -20,20 +20,43 @@ export default async function DashboardPage() {
   }
 
   // Fetch reports
-  const query = supabase
+  let reportsQuery = supabase
     .from('reports')
-    .select(`
-      *,
-      profile:profiles(*)
-    `)
+    .select('*')
     .order('created_at', { ascending: false })
     .limit(50)
 
   if (user) {
-    query.eq('user_id', user.id)
+    reportsQuery = reportsQuery.eq('user_id', user.id)
   }
 
-  const { data: reports } = await query
+  const { data: reportsData, error: reportsError } = await reportsQuery
+
+  if (reportsError) {
+    console.error('Error fetching reports for dashboard:', reportsError)
+  }
+
+  // Then get profiles for each report
+  let reports = []
+  if (reportsData) {
+    for (const report of reportsData) {
+      let profile = null
+      if (report.user_id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', report.user_id)
+          .single()
+
+        profile = profileData
+      }
+
+      reports.push({
+        ...report,
+        profile: profile
+      })
+    }
+  }
 
   // Calculate stats
   const totalReports = reports?.length || 0
@@ -41,6 +64,7 @@ export default async function DashboardPage() {
     ? Math.round(reports!.reduce((sum, r) => sum + r.fps_avg, 0) / totalReports)
     : 0
   const totalLikes = reports?.reduce((sum, r) => sum + r.likes, 0) || 0
+  const totalViews = reports?.reduce((sum, r) => sum + (r.views || 0), 0) || 0
   const recentReports = reports?.filter(r => {
     const reportDate = new Date(r.created_at)
     const weekAgo = new Date()
@@ -140,14 +164,12 @@ export default async function DashboardPage() {
 
           <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
             <div className="flex items-center space-x-2 mb-2">
-              <Calendar className="w-5 h-5 text-emerald-400" />
-              <span className="text-zinc-300">Atividade</span>
+              <Users className="w-5 h-5 text-emerald-400" />
+              <span className="text-zinc-300">Visualizações Totais</span>
             </div>
-            <div className="text-2xl font-bold text-emerald-400">
-              {totalReports > 0 ? 'Ativo' : 'Iniciante'}
-            </div>
+            <div className="text-2xl font-bold text-emerald-400">{totalViews}</div>
             <div className="text-zinc-500 text-sm mt-1">
-              {profile?.is_supporter ? 'Apoiador' : 'Comunidade'}
+              {totalReports > 0 ? Math.round(totalViews / totalReports * 10) / 10 : 0} views/report
             </div>
           </div>
         </div>

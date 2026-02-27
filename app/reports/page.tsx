@@ -8,24 +8,45 @@ interface PageProps {
 
 export default async function ReportsPage({ searchParams }: PageProps) {
   const supabase = await createClient()
-  const gameFilter = typeof searchParams.game === 'string' ? searchParams.game : ''
+  const params = await searchParams
+  const gameFilter = typeof params.game === 'string' ? params.game : ''
 
-  let query = supabase
+  // First get all reports
+  let reportsQuery = supabase
     .from('reports')
-    .select(`
-      *,
-      profile:profiles(*)
-    `)
+    .select('*')
     .order('created_at', { ascending: false })
 
   if (gameFilter) {
-    query = query.ilike('game', `%${gameFilter}%`)
+    reportsQuery = reportsQuery.ilike('game', `%${gameFilter}%`)
   }
 
-  const { data: reports, error } = await query
+  const { data: reportsData, error: reportsError } = await reportsQuery
 
-  if (error) {
-    console.error('Error fetching reports:', error)
+  if (reportsError) {
+    console.error('Error fetching reports:', reportsError)
+  }
+
+  // Then get profiles for each report
+  let reports = []
+  if (reportsData) {
+    for (const report of reportsData) {
+      let profile = null
+      if (report.user_id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', report.user_id)
+          .single()
+
+        profile = profileData
+      }
+
+      reports.push({
+        ...report,
+        profile: profile
+      })
+    }
   }
 
   return (

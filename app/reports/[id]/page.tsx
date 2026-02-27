@@ -16,6 +16,7 @@ export default function ReportDetailPage() {
   const [likesCount, setLikesCount] = useState(0)
   const [canEdit, setCanEdit] = useState(false)
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
+  const [hasIncrementedViews, setHasIncrementedViews] = useState(false)
   const params = useParams()
   const router = useRouter()
   const supabase = createClient()
@@ -64,10 +65,27 @@ export default function ReportDetailPage() {
           }
         }
 
+        // Increment view count only once per visit
+        let updatedViews = reportData.views || 0
+        if (!hasIncrementedViews) {
+          const { error: viewError } = await supabase
+            .from('reports')
+            .update({ views: updatedViews + 1 })
+            .eq('id', params.id)
+
+          if (viewError) {
+            console.warn('Failed to increment view count:', viewError)
+          } else {
+            updatedViews += 1
+            setHasIncrementedViews(true)
+          }
+        }
+
         // Combine report with profile
         const fullReportData = {
           ...reportData,
-          profile: profileData
+          profile: profileData,
+          views: updatedViews // Use the updated view count
         }
 
         console.log('Report data:', reportData)

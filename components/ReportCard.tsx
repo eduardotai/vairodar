@@ -1,4 +1,4 @@
-import { Heart, User } from 'lucide-react'
+import { Heart, User, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { Report } from '@/lib/types'
 
@@ -90,10 +90,16 @@ export function ReportCard({ report }: ReportCardProps) {
             {formatDate(report.created_at)}
           </span>
         </div>
-        <button className="flex items-center space-x-1 text-zinc-400 hover:text-red-400 transition-colors">
-          <Heart className="w-4 h-4" />
-          <span className="text-sm">{report.likes}</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-1 text-zinc-400">
+            <Eye className="w-4 h-4" />
+            <span className="text-sm">{report.views || 0}</span>
+          </div>
+          <button className="flex items-center space-x-1 text-zinc-400 hover:text-red-400 transition-colors">
+            <Heart className="w-4 h-4" />
+            <span className="text-sm">{report.likes}</span>
+          </button>
+        </div>
       </div>
     </div>
     </Link>

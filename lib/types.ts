@@ -24,6 +24,7 @@ export interface Report {
   images?: string[];
   created_at: string;
   likes: number;
+  views: number;
   profile?: Profile;
 }
 
