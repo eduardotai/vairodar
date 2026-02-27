@@ -11,11 +11,26 @@ function ReportsPageContent() {
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [abortController, setAbortController] = useState<AbortController | null>(null)
   const searchParams = useSearchParams()
   const supabase = createClient()
 
-  const fetchReports = async (gameFilter = '') => {
-    setLoading(true)
+  const fetchReports = async (gameFilter = '', isRefresh = false) => {
+    // Cancel previous request
+    if (abortController) {
+      abortController.abort()
+    }
+
+    const controller = new AbortController()
+    setAbortController(controller)
+
+    if (isRefresh) {
+      setIsRefreshing(true)
+    } else {
+      setLoading(true)
+    }
+
     try {
       // First get all reports
       let reportsQuery = supabase
@@ -56,11 +71,21 @@ function ReportsPageContent() {
         }
       }
 
-      setReports(reportsWithProfiles)
+      // Only update state if request wasn't aborted
+      if (!controller.signal.aborted) {
+        setReports(reportsWithProfiles)
+      }
     } catch (error) {
-      console.error('Error fetching reports:', error)
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Error fetching reports:', error)
+      }
     } finally {
-      setLoading(false)
+      if (isRefresh) {
+        setIsRefreshing(false)
+      } else {
+        setLoading(false)
+      }
+      setAbortController(null)
     }
   }
 
@@ -73,16 +98,16 @@ function ReportsPageContent() {
   // Update data when user returns to the tab
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
+      if (!document.hidden && !isRefreshing) {
         // User returned to tab, refresh data
         const gameFilter = searchParams.get('game') || ''
-        fetchReports(gameFilter)
+        fetchReports(gameFilter, true)
       }
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [searchParams])
+  }, [searchParams, isRefreshing])
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -93,7 +118,9 @@ function ReportsPageContent() {
   }
 
   const handleRefresh = () => {
-    fetchReports(searchTerm)
+    if (!isRefreshing) {
+      fetchReports(searchTerm, true)
+    }
   }
 
   if (loading) {
@@ -116,9 +143,10 @@ function ReportsPageContent() {
           <h1 className="text-3xl font-bold text-emerald-400">Reports da Comunidade</h1>
           <button
             onClick={handleRefresh}
-            className="bg-zinc-700 text-zinc-100 px-4 py-2 rounded-md hover:bg-zinc-600 transition-colors"
+            disabled={isRefreshing}
+            className="bg-zinc-700 text-zinc-100 px-4 py-2 rounded-md hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Atualizar
+            {isRefreshing ? 'Atualizando...' : 'Atualizar'}
           </button>
         </div>
 
