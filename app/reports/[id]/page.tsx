@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Session, AuthChangeEvent } from '@supabase/supabase-js'
@@ -17,6 +17,7 @@ export default function ReportDetailPage() {
   const [canEdit, setCanEdit] = useState(false)
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
   const [hasProcessedView, setHasProcessedView] = useState(false)
+  const timeLeftRef = useRef<number | null>(null)
   const params = useParams()
   const router = useRouter()
   const supabase = createClient()
@@ -145,7 +146,9 @@ export default function ReportDetailPage() {
 
             if (timeDiff < twoHours) {
               setCanEdit(true)
-              setTimeLeft(twoHours - timeDiff)
+              const remainingTime = twoHours - timeDiff
+              setTimeLeft(remainingTime)
+              timeLeftRef.current = remainingTime
             }
           }
 
@@ -174,14 +177,18 @@ export default function ReportDetailPage() {
   useEffect(() => {
     if (timeLeft !== null && timeLeft > 0) {
       const timer = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev && prev > 1000) {
-            return prev - 1000
-          } else {
-            setCanEdit(false)
-            return 0
+        timeLeftRef.current = timeLeftRef.current ? timeLeftRef.current - 1000 : 0
+
+        if (timeLeftRef.current <= 0) {
+          setCanEdit(false)
+          setTimeLeft(0)
+          timeLeftRef.current = 0
+        } else {
+          // Only update state every 10 seconds to reduce re-renders
+          if (timeLeftRef.current % 10000 === 0) {
+            setTimeLeft(timeLeftRef.current)
           }
-        })
+        }
       }, 1000)
 
       return () => clearInterval(timer)
