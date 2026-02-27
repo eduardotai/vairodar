@@ -16,7 +16,6 @@ export default function ReportDetailPage() {
   const [likesCount, setLikesCount] = useState(0)
   const [canEdit, setCanEdit] = useState(false)
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
-  const [hasProcessedView, setHasProcessedView] = useState(false)
   const timeLeftRef = useRef<number | null>(null)
   const params = useParams()
   const router = useRouter()
@@ -68,9 +67,19 @@ export default function ReportDetailPage() {
 
   useEffect(() => {
     const fetchReport = async () => {
-      if (!params.id || hasProcessedView) return
+      if (!params.id) return
 
-      console.log('Fetching report with ID:', params.id)
+      // Prevent multiple executions for the same report
+      const executionKey = `fetching_${params.id}`
+      if (typeof window !== 'undefined' && localStorage.getItem(executionKey)) {
+        return
+      }
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(executionKey, 'true')
+      }
+
+
 
       try {
         // First try to get the report
@@ -105,7 +114,10 @@ export default function ReportDetailPage() {
         let updatedViews = reportData.views || 0
         const viewKey = `report_view_${params.id}`
 
-        if (typeof window !== 'undefined' && !localStorage.getItem(viewKey)) {
+        // Check if already viewed in this session
+        const hasViewed = typeof window !== 'undefined' && localStorage.getItem(viewKey) === 'viewed'
+
+        if (!hasViewed) {
           const { error: viewError } = await supabase
             .from('reports')
             .update({ views: updatedViews + 1 })
@@ -115,7 +127,10 @@ export default function ReportDetailPage() {
             console.warn('Failed to increment view count:', viewError)
           } else {
             updatedViews += 1
-            localStorage.setItem(viewKey, 'true')
+            // Mark as viewed
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(viewKey, 'viewed')
+            }
           }
         }
 
@@ -157,21 +172,22 @@ export default function ReportDetailPage() {
           const hasLiked = typeof window !== 'undefined' && localStorage.getItem(likeKey) === 'true'
           setIsLiked(hasLiked)
         }
-
-        // Mark as processed to prevent re-execution
-        setHasProcessedView(true)
       } catch (error) {
         console.error('Error fetching report:', error)
         console.error('Error details:', error)
       } finally {
         setLoading(false)
+        // Clean up execution flag
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(`fetching_${params.id}`)
+        }
       }
     }
 
-    if (params.id && !hasProcessedView) {
+    if (params.id) {
       fetchReport()
     }
-  }, [params.id, session, hasProcessedView])
+  }, [params.id, session])
 
   // Update countdown timer
   useEffect(() => {
