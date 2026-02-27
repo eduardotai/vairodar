@@ -70,13 +70,13 @@ export default function SubmitPage() {
   useEffect(() => {
     const fetchHardwareOptions = async () => {
       try {
-        // Fetch hardware data from GitHub repo (replace YOUR_USERNAME and YOUR_REPO with actual values)
-        const response = await fetch('https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/hardware.json')
+        // Fetch hardware data from local file
+        const response = await fetch('/hardware.json')
         if (response.ok) {
           const data = await response.json()
           setHardwareOptions(data)
         } else {
-          console.error('Failed to fetch hardware options from GitHub')
+          console.error('Failed to fetch hardware options')
           // Fallback to basic list
           setHardwareOptions({
             cpus: ['AMD Ryzen 5 5600', 'Intel Core i5-12600K'],
