@@ -195,6 +195,24 @@ FOR SELECT USING (bucket_id = 'images');
 - `master`: Código estável (produção)
 - Use branches para features se necessário
 
+## Funcionalidades Implementadas
+
+### ✅ Sistema de Reports Dinâmicos
+- **Páginas individuais**: `/reports/[id]` - Visualização completa de cada report
+- **Sistema de edição**: `/reports/[id]/edit` - Edição com limite de 2 horas
+- **Redirecionamento automático**: Após submit, usuário é redirecionado para seu report
+- **Cards clicáveis**: ReportCard agora leva para a página individual
+
+### ✅ Dashboard Aprimorado
+- **Seção de perfil**: Avatar, nome, bio e status de apoiador
+- **Estatísticas detalhadas**: Reports enviados, FPS médio, likes recebidos, atividade semanal
+- **Links diretos**: Acesso rápido para editar perfil e criar reports
+
+### ✅ Funcionalidades de Usuário
+- **Edição temporizada**: Reports podem ser editados por até 2 horas após publicação
+- **Contador visual**: Timer mostra tempo restante para edição
+- **Perfil completo**: Dashboard mostra informações completas do usuário
+
 ## Importante
 
 - ✅ **Sempre teste localmente** antes de push para produção
