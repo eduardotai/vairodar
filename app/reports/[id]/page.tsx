@@ -16,6 +16,7 @@ export default function ReportDetailPage() {
   const [likesCount, setLikesCount] = useState(0)
   const [canEdit, setCanEdit] = useState(false)
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
+  const [hasProcessedView, setHasProcessedView] = useState(false)
   const params = useParams()
   const router = useRouter()
   const supabase = createClient()
@@ -66,7 +67,7 @@ export default function ReportDetailPage() {
 
   useEffect(() => {
     const fetchReport = async () => {
-      if (!params.id) return
+      if (!params.id || hasProcessedView) return
 
       console.log('Fetching report with ID:', params.id)
 
@@ -103,7 +104,10 @@ export default function ReportDetailPage() {
         let updatedViews = reportData.views || 0
         const viewKey = `report_view_${params.id}`
 
+        console.log('View key:', viewKey, 'Has viewed:', localStorage.getItem(viewKey))
+
         if (typeof window !== 'undefined' && !localStorage.getItem(viewKey)) {
+          console.log('Incrementing view for report:', params.id)
           const { error: viewError } = await supabase
             .from('reports')
             .update({ views: updatedViews + 1 })
@@ -114,7 +118,10 @@ export default function ReportDetailPage() {
           } else {
             updatedViews += 1
             localStorage.setItem(viewKey, 'true')
+            console.log('View incremented to:', updatedViews)
           }
+        } else {
+          console.log('View already counted for this user')
         }
 
         // Combine report with profile
@@ -153,6 +160,9 @@ export default function ReportDetailPage() {
           const hasLiked = typeof window !== 'undefined' && localStorage.getItem(likeKey) === 'true'
           setIsLiked(hasLiked)
         }
+
+        // Mark as processed to prevent re-execution
+        setHasProcessedView(true)
       } catch (error) {
         console.error('Error fetching report:', error)
         console.error('Error details:', error)
@@ -161,10 +171,10 @@ export default function ReportDetailPage() {
       }
     }
 
-    if (params.id) {
+    if (params.id && !hasProcessedView) {
       fetchReport()
     }
-  }, [params.id, session])
+  }, [params.id, session, hasProcessedView])
 
   // Update countdown timer
   useEffect(() => {

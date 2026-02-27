@@ -70,6 +70,20 @@ function ReportsPageContent() {
     fetchReports(gameFilter)
   }, [searchParams])
 
+  // Update data when user returns to the tab
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // User returned to tab, refresh data
+        const gameFilter = searchParams.get('game') || ''
+        fetchReports(gameFilter)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [searchParams])
+
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
