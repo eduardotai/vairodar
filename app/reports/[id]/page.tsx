@@ -104,10 +104,7 @@ export default function ReportDetailPage() {
         let updatedViews = reportData.views || 0
         const viewKey = `report_view_${params.id}`
 
-        console.log('View key:', viewKey, 'Has viewed:', localStorage.getItem(viewKey))
-
         if (typeof window !== 'undefined' && !localStorage.getItem(viewKey)) {
-          console.log('Incrementing view for report:', params.id)
           const { error: viewError } = await supabase
             .from('reports')
             .update({ views: updatedViews + 1 })
@@ -118,10 +115,7 @@ export default function ReportDetailPage() {
           } else {
             updatedViews += 1
             localStorage.setItem(viewKey, 'true')
-            console.log('View incremented to:', updatedViews)
           }
-        } else {
-          console.log('View already counted for this user')
         }
 
         // Combine report with profile
