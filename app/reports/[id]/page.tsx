@@ -16,10 +16,44 @@ export default function ReportDetailPage() {
   const [likesCount, setLikesCount] = useState(0)
   const [canEdit, setCanEdit] = useState(false)
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
-  const [hasIncrementedViews, setHasIncrementedViews] = useState(false)
   const params = useParams()
   const router = useRouter()
   const supabase = createClient()
+
+  const handleLike = async () => {
+    if (!session || !report) return
+
+    try {
+      const newLikesCount = isLiked ? likesCount - 1 : likesCount + 1
+      const likeKey = `report_like_${report.id}`
+
+      const { error } = await supabase
+        .from('reports')
+        .update({ likes: newLikesCount })
+        .eq('id', report.id)
+
+      if (error) {
+        console.error('Error updating likes:', error)
+        return
+      }
+
+      const newIsLiked = !isLiked
+      setIsLiked(newIsLiked)
+      setLikesCount(newLikesCount)
+
+      // Update localStorage
+      if (newIsLiked) {
+        localStorage.setItem(likeKey, 'true')
+      } else {
+        localStorage.removeItem(likeKey)
+      }
+
+      // Update local report state
+      setReport(prev => prev ? { ...prev, likes: newLikesCount } : null)
+    } catch (error) {
+      console.error('Error handling like:', error)
+    }
+  }
 
   useEffect(() => {
     const getSession = async () => {
@@ -65,9 +99,11 @@ export default function ReportDetailPage() {
           }
         }
 
-        // Increment view count only once per visit
+        // Increment view count only once per user per report
         let updatedViews = reportData.views || 0
-        if (!hasIncrementedViews) {
+        const viewKey = `report_view_${params.id}`
+
+        if (typeof window !== 'undefined' && !localStorage.getItem(viewKey)) {
           const { error: viewError } = await supabase
             .from('reports')
             .update({ views: updatedViews + 1 })
@@ -77,7 +113,7 @@ export default function ReportDetailPage() {
             console.warn('Failed to increment view count:', viewError)
           } else {
             updatedViews += 1
-            setHasIncrementedViews(true)
+            localStorage.setItem(viewKey, 'true')
           }
         }
 
@@ -112,9 +148,10 @@ export default function ReportDetailPage() {
             }
           }
 
-          // Check if user liked this report
-          // Note: This would require a likes table in a real implementation
-          setIsLiked(false)
+          // Check if user liked this report (using localStorage for simplicity)
+          const likeKey = `report_like_${params.id}`
+          const hasLiked = typeof window !== 'undefined' && localStorage.getItem(likeKey) === 'true'
+          setIsLiked(hasLiked)
         }
       } catch (error) {
         console.error('Error fetching report:', error)
@@ -154,17 +191,7 @@ export default function ReportDetailPage() {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   }
 
-  const handleLike = async () => {
-    if (!session) {
-      router.push('/auth/login')
-      return
-    }
 
-    // In a real implementation, this would update a likes table
-    // For now, just toggle locally
-    setIsLiked(!isLiked)
-    setLikesCount(prev => isLiked ? prev - 1 : prev + 1)
-  }
 
   if (loading) {
     return (

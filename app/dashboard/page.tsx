@@ -1,62 +1,89 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { ReportCard } from '@/components/ReportCard'
 import Link from 'next/link'
 import { Heart, TrendingUp, Users, User, Settings, Award, Calendar, BarChart3 } from 'lucide-react'
+import type { Report, Profile } from '@/lib/types'
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
+export default function DashboardPage() {
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [reports, setReports] = useState<Report[]>([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const fetchDashboardData = async () => {
+    setLoading(true)
+    try {
+      const { data: { user: userData }, error: userError } = await supabase.auth.getUser()
 
-  let profile = null
-  if (user) {
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-    profile = profileData
-  }
-
-  // Fetch reports
-  let reportsQuery = supabase
-    .from('reports')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50)
-
-  if (user) {
-    reportsQuery = reportsQuery.eq('user_id', user.id)
-  }
-
-  const { data: reportsData, error: reportsError } = await reportsQuery
-
-  if (reportsError) {
-    console.error('Error fetching reports for dashboard:', reportsError)
-  }
-
-  // Then get profiles for each report
-  let reports = []
-  if (reportsData) {
-    for (const report of reportsData) {
-      let profile = null
-      if (report.user_id) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', report.user_id)
-          .single()
-
-        profile = profileData
+      if (userError || !userData) {
+        router.push('/auth/login')
+        return
       }
 
-      reports.push({
-        ...report,
-        profile: profile
-      })
+      setUser(userData)
+
+      // Fetch profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userData.id)
+        .single()
+      setProfile(profileData)
+
+      // Fetch reports
+      let reportsQuery = supabase
+        .from('reports')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      reportsQuery = reportsQuery.eq('user_id', userData.id)
+
+      const { data: reportsData, error: reportsError } = await reportsQuery
+
+      if (reportsError) {
+        console.error('Error fetching reports for dashboard:', reportsError)
+      }
+
+      // Then get profiles for each report
+      let reportsWithProfiles = []
+      if (reportsData) {
+        for (const report of reportsData) {
+          let profile = null
+          if (report.user_id) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', report.user_id)
+              .single()
+
+            profile = profileData
+          }
+
+          reportsWithProfiles.push({
+            ...report,
+            profile: profile
+          })
+        }
+      }
+
+      setReports(reportsWithProfiles)
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    } finally {
+      setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchDashboardData()
+  }, [])
 
   // Calculate stats
   const totalReports = reports?.length || 0
@@ -72,12 +99,33 @@ export default async function DashboardPage() {
     return reportDate > weekAgo
   }).length || 0
 
+  if (loading) {
+    return (
+      <div className="min-h-screen px-4 py-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto"></div>
+            <p className="text-zinc-400 mt-4">Carregando dashboard...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-emerald-400 mb-8">
-          {user ? 'Meu Dashboard' : 'Dashboard'}
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-emerald-400">
+            {user ? 'Meu Dashboard' : 'Dashboard'}
+          </h1>
+          <button
+            onClick={fetchDashboardData}
+            className="bg-zinc-700 text-zinc-100 px-4 py-2 rounded-md hover:bg-zinc-600 transition-colors"
+          >
+            Atualizar
+          </button>
+        </div>
 
         {/* User Profile Section */}
         {user && profile && (
